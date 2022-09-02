@@ -203,11 +203,11 @@ void main(){
 	float lightVis = clamp01(dot(normalize(shadowLightPosition), normalize(upPosition)));
 	float shadowResCheck = 0.0;
 	switch(shadowMapResolution){
-		case 1024: shadowResCheck = 2.0 / 1024.0; break;
-		case 2048: shadowResCheck = 4.0 / 2048.0; break;
-		case 4096: shadowResCheck = 6.0 / 4096.0; break;
-		case 8192: shadowResCheck = 8.0 / 8192.0; break;
-		default: shadowResCheck = 1.0 / 512.0; break;
+		case 1024: shadowResCheck = 4.0 / 1024.0; break;
+		case 2048: shadowResCheck = 6.0 / 2048.0; break;
+		case 4096: shadowResCheck = 8.0 / 4096.0; break;
+		case 8192: shadowResCheck = 10.0 / 8192.0; break;
+		default: shadowResCheck = 2.0 / 512.0; break;
 	}
 		shadowPos.z -= (distShadowP * distShadowP * shadowResCheck) / lightVis;
 		shadowPos = shadowPos * 0.5 + 0.5;
@@ -252,8 +252,12 @@ void main(){
 			fogDist = fogDist * 0.7;
 		#endif
 		
-		if(isEyeInWater == 1) fogDist = fogify(1.0 - fogDist, 0.5);
-		outColor.rgb = mix(outColor.rgb, calcSkyColor(normalize(viewPos)), fogDist);
+		if(isEyeInWater == 1){
+			fogDist = fogify(1.0 - fogDist, 0.25);
+			outColor.rgb = mix(outColor.rgb, fogColor, fogDist);
+		} else {
+			outColor.rgb = mix(outColor.rgb, calcSkyColor(normalize(viewPos)), fogDist);
+		}
 	#endif
 #endif
 

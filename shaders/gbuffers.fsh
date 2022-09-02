@@ -23,17 +23,16 @@ uniform sampler2D texture;
 const int noiseTextureResolution = 256;
 const float sunPathRotation = -30.0;
 const bool shadowHardwareFiltering = false;
-const float shadowDistance = 100.0; //[100.0 150.0 200.0 250.0 300.0 350.0 400.0 450.0 500.0 550.0 600.0 650.0 700.0]
+const float shadowDistance = 128.0; //[64.0 96.0 128.0 160.0 192.0 224.0 256.0 288.0 320.0 352.0 384.0 416.0 448.0 480.0 512.0]
 const int shadowMapResolution = 1024; //[512 1024 2048 4096 8192]
 
 #define ENABLE_FOG
 #define ENABLE_PCSS
 #define ENABLE_COLORED_SHADOW
 #define SHADOW_BRIGHTNESS 0.6 //[0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
-#define SHADOW_DIST_FACTOR 0.85 //[0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95]
 #define PCF_SAMPLE 16 //[8 16 32 64]
 #define PCF_BLUR_RADIUS 1.0 //[1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
-#define PENUMBRA_SAMPLE 8 //[8 16 32]
+#define PENUMBRA_SAMPLE 8 //[8 16]
 #define PENUMBRA_RADIUS 1.5 //[1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
 
 const float pi = 3.14159265;
@@ -197,7 +196,7 @@ void main(){
 	vec3 shadowPos = vmMAD(shadowModelView, worldPos);
 		shadowPos = vmMAD(shadowProjection, shadowPos);
 
-	float distShadowP = mix(1.0, length(shadowPos.xy), SHADOW_DIST_FACTOR);
+	float distShadowP = mix(1.0, length(shadowPos.xy), 0.85);
 		shadowPos.xy /= distShadowP;
 		shadowPos.z *= 0.25;
 		
@@ -235,7 +234,7 @@ void main(){
 	}
 
 	#ifndef GBUFFERS_TEXTURED
-		shadedLight *= clamp0(dot(normalize(shadowLightPosition), flatNormal.xyz));
+		if(!(flatNormal.a > 0.0)) shadedLight *= clamp0(dot(normalize(shadowLightPosition), flatNormal.xyz));
 	#endif
 
 	float shadowBrightness = mix(SHADOW_BRIGHTNESS, 1.0, rainStrength);

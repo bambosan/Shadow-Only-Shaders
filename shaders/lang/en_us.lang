@@ -1,11 +1,27 @@
 
-option.ENABLE_COLORED_SHADOW=Enable Coloured Shadow
-option.ENABLE_PCSS=Enable PCSS
-option.ENABLE_FOG=Enable Fog
+option.ENABLE_COLORED_SHADOW=Coloured Shadow
+option.ENABLE_PCSS=PCSS
+option.ENABLE_FOG=Fog
+
 option.SHADOW_BRIGHTNESS=Shadow Brightness
 option.shadowMapResolution=Shadow Resolution
 option.shadowDistance=Shadow Distance
-option.SHADOW_DIST_FACTOR=Shadow Distort Factor
+value.shadowDistance.64.0=4 Chunks
+value.shadowDistance.96.0=6 Chunks
+value.shadowDistance.128.0=8 Chunks
+value.shadowDistance.160.0=10 Chunks
+value.shadowDistance.192.0=12 Chunks
+value.shadowDistance.224.0=14 Chunks
+value.shadowDistance.256.0=16 Chunks
+value.shadowDistance.288.0=18 Chunks
+value.shadowDistance.320.0=20 Chunks
+value.shadowDistance.352.0=22 Chunks
+value.shadowDistance.384.0=24 Chunks
+value.shadowDistance.416.0=26 Chunks
+value.shadowDistance.448.0=28 Chunks
+value.shadowDistance.480.0=30 Chunks
+value.shadowDistance.512.0=32 Chunks
+
 option.PCF_SAMPLE=PCF Shadow Sample
 option.PCF_BLUR_RADIUS=PCF Shadow Blur Radius
 option.PENUMBRA_SAMPLE=Penumbra Sample

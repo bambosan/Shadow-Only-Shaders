@@ -1,2 +1,2 @@
 #version 130
-#include "./gbuffers.fsh"
+#include "gbuffers.fsh"

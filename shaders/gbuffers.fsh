@@ -24,24 +24,23 @@ const int noiseTextureResolution = 256;
 const float sunPathRotation = -30.0;
 const bool shadowHardwareFiltering = false;
 const float shadowDistance = 128.0; //[64.0 96.0 128.0 160.0 192.0 224.0 256.0 288.0 320.0 352.0 384.0 416.0 448.0 480.0 512.0]
-const int shadowMapResolution = 1024; //[512 1024 2048 4096 8192]
+const int shadowMapResolution = 2048; //[512 1024 2048 4096 8192]
 
 #define ENABLE_FOG
 #define ENABLE_PCSS
 #define ENABLE_COLORED_SHADOW
-#define SHADOW_BRIGHTNESS 0.6 //[0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define SHADOW_BRIGHTNESS 0.65 //[0.0 0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1.0]
 #define PCF_SAMPLE 16 //[8 16 32 64]
 #define PCF_BLUR_RADIUS 1.0 //[1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
 #define PENUMBRA_SAMPLE 8 //[8 16]
 #define PENUMBRA_RADIUS 1.5 //[1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
 
-const float pi = 3.14159265;
-const float tau = 6.28318531;
-
-#define clamp0(x) clamp(x, 0.0, 1.0)
+#define clamp01(x) clamp(x, 0.0, 1.0)
 #define max0(x) max(x, 0.0)
 #define rot2d(rot) mat2(cos(rot), sin(rot), -sin(rot), cos(rot))
 
+// https://github.com/jhk2/glsandbox/blob/master/kgl/samples/shadow/pcss.glsl
+// http://developer.download.nvidia.com/whitepapers/2008/PCSS_Integration.pdf
 const vec2 poisson[64] = vec2[64](
 	vec2(-0.04117257, -0.1597612),
 	vec2(0.06731031, -0.4353096),
@@ -114,7 +113,7 @@ float fogify(float x, float w){
 }
 
 vec3 calcSkyColor(vec3 pos){
-	float horizon = dot(pos, gbufferModelView[1].xyz);
+	float horizon = dot(pos, normalize(upPosition));
 	return mix(skyColor, fogColor, fogify(max0(horizon), 0.2));
 }
 
@@ -122,11 +121,15 @@ vec3 vmMAD(mat4 matx, vec3 pos){
 	return mat3(matx) * pos + matx[3].xyz;
 }
 
-float blueNoise = texture2D(noisetex, gl_FragCoord.xy / noiseTextureResolution).r;
+vec2 poissonBlur(int i, float blurRadius){
+	float blueNoise = texture2D(noisetex, gl_FragCoord.xy / noiseTextureResolution).r;
+	return rot2d(blueNoise * 6.28318531) * poisson[i] * blurRadius;
+}
+
 float shadowPCF(sampler2D shadowTex, vec3 shadowPos, float blurRadius){
 	float shadowMap = 0.0;
-	for(int i = 0; i < PCF_SAMPLE; i++){
-		vec2 offsetPos = shadowPos.xy + (rot2d(blueNoise * tau) * poisson[i] * blurRadius);
+	for(int i = 0; i < PCF_SAMPLE; ++i){
+		vec2 offsetPos = shadowPos.xy + poissonBlur(i, blurRadius);
 		shadowMap += step(shadowPos.z, texture2D(shadowTex, offsetPos).r);
 	}
 		shadowMap /= PCF_SAMPLE;
@@ -134,32 +137,29 @@ float shadowPCF(sampler2D shadowTex, vec3 shadowPos, float blurRadius){
 }
 
 #ifdef ENABLE_PCSS
-float findBlocker(vec3 shadowPos){
-	float blocker = 0.0;
-	float numBlocker = 0.0;
-	float penumbraRad = PENUMBRA_RADIUS * 0.01;
-
-	for(int i = 0; i < PENUMBRA_SAMPLE; i++){
-		vec2 offsetPos = shadowPos.xy + (rot2d(blueNoise * tau) * poisson[i] * penumbraRad);
-		float shadowDepth = texture2D(shadowtex1, offsetPos).r;
-		
-		if(shadowDepth < shadowPos.z){
-			blocker += shadowDepth;
-			numBlocker++;
+	float findBlocker(vec3 shadowPos){
+		float blocker = 0.0, numBlocker = 0.0, penumbraRad = PENUMBRA_RADIUS * 0.01;
+		for(int i = 0; i < PENUMBRA_SAMPLE; ++i){
+			vec2 offsetPos = shadowPos.xy + poissonBlur(i, penumbraRad);
+			float shadowDepth = texture2D(shadowtex1, offsetPos).r;
+			
+			if(shadowDepth < shadowPos.z){
+				blocker += shadowDepth;
+				numBlocker++;
+			}
 		}
+			blocker /= numBlocker;
+			blocker = (shadowPos.z - blocker) / blocker;
+		return clamp01(blocker);
 	}
-		blocker /= numBlocker;
-		blocker = (shadowPos.z - blocker) / blocker;
-	return clamp0(blocker);
-}
 #endif
 
 #ifdef GBUFFERS_SKYBASIC
-uniform mat4 gbufferProjectionInverse;
-uniform float viewWidth;
-uniform float viewHeight;
+	uniform mat4 gbufferProjectionInverse;
+	uniform float viewWidth;
+	uniform float viewHeight;
 
-in float starData;
+	in float starData;
 #endif
 
 in vec2 lmCoord;
@@ -171,7 +171,7 @@ in vec4 vertColor;
 
 void main(){
 	vec4 outColor = vec4(0.0, 0.0, 0.0, 1.0);
-	
+
 #ifdef GBUFFERS_SKYBASIC
 	if(starData > 0.5){
 		outColor.rgb = vertColor.rgb;
@@ -200,8 +200,7 @@ void main(){
 		shadowPos.xy /= distShadowP;
 		shadowPos.z *= 0.25;
 		
-	float lightVis = clamp0(dot(normalize(shadowLightPosition), normalize(upPosition)));
-	
+	float lightVis = clamp01(dot(normalize(shadowLightPosition), normalize(upPosition)));
 	float shadowResCheck = 0.0;
 	switch(shadowMapResolution){
 		case 1024: shadowResCheck = 2.0 / 1024.0; break;
@@ -215,38 +214,39 @@ void main(){
 	
 	float blurRadius = PCF_BLUR_RADIUS / shadowMapResolution;
 	#ifdef ENABLE_PCSS
-	float blocker = findBlocker(shadowPos);
-		blurRadius = max(blurRadius, blocker);
+		float blocker = findBlocker(shadowPos);
+			blurRadius = max(blurRadius, blocker);
 	#endif
 
 	float shadowMap0 = shadowPCF(shadowtex0, shadowPos, blurRadius);
 	float shadowMap1 = shadowPCF(shadowtex1, shadowPos, blurRadius);
 
 	vec3 shadedLight = vec3(1.0);
-
 	if(length(worldPos) < shadowDistance){
-	#ifdef ENABLE_COLORED_SHADOW
-		vec4 shadowMapCol = texture2D(shadowcolor0, shadowPos.xy);
-		shadedLight = mix(shadedLight, shadowMapCol.rgb, pow(shadowMapCol.a, 0.5)) * (shadowMap1 - shadowMap0) + shadowMap0;
-	#else
-		shadedLight = vec3(shadowMap1 + shadowMap0) * 0.5;
-	#endif
+		#ifdef ENABLE_COLORED_SHADOW
+			vec4 shadowMapCol = texture2D(shadowcolor0, shadowPos.xy);
+			shadedLight = mix(shadedLight, shadowMapCol.rgb, pow(shadowMapCol.a, 0.5)) * (shadowMap1 - shadowMap0) + shadowMap0;
+		#else
+			shadedLight = vec3(shadowMap1 + shadowMap0) * 0.5;
+		#endif
 	}
 
 	#ifndef GBUFFERS_TEXTURED
-		if(!(flatNormal.a > 0.0)) shadedLight *= clamp0(dot(normalize(shadowLightPosition), flatNormal.xyz));
+		if(!(flatNormal.a > 0.0)) shadedLight = shadedLight * clamp01(dot(normalize(shadowLightPosition), flatNormal.xyz)) * 2.0;
 	#endif
 
-	float shadowBrightness = mix(SHADOW_BRIGHTNESS, 1.0, rainStrength);
 		lightVis = texture2D(lightmap, vec2(0, 1)).r * lmCoord.y;
-	vec3 ambientLightmap = texture2D(lightmap, vec2(lmCoord.x * clamp0(1.0 - lightVis), lmCoord.y * shadowBrightness)).rgb;
-		ambientLightmap += (shadedLight * clamp0(1.0 - shadowBrightness));
+	float shadowBrightness = mix(SHADOW_BRIGHTNESS, 1.0, rainStrength);
+	vec3 ambientLightmap = texture2D(lightmap, vec2(lmCoord.x * clamp01(1.0 - lightVis), lmCoord.y * shadowBrightness)).rgb;
+
+		shadowBrightness += clamp01(1.0 - lightVis) * clamp01(1.0 - shadowBrightness);
+		ambientLightmap += (shadedLight * clamp01(1.0 - shadowBrightness));
 	outColor.rgb *= ambientLightmap;
 #endif
 
 #ifdef ENABLE_FOG
 	#if !defined(GBUFFERS_SKYTEXTURED) && !defined(GBUFFERS_SKYBASIC)
-		float fogDist = pow(clamp0(length(worldPos) / far), 5.0);
+		float fogDist = pow(clamp01(length(worldPos) / far), 5.0);
 		
 		#ifdef GBUFFERS_CLOUDS
 			fogDist = fogDist * 0.7;

@@ -1,2 +1,2 @@
 #version 130
-#include "./gbuffers.vsh"
+#include "gbuffers.vsh"

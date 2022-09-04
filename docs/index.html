@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A Shaders for Minecraft: Java Edition">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open Sans">
-    <link rel="stylesheet" href="https://unpkg.com/chota@latest">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8231611512488101" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./chota.min.css">
+    
     <style>
       :root{
         --color-onedark1: #282c34;
@@ -18,12 +18,19 @@
         --color-onedark6: #c678dd;
         --color-onedark7: #56b6c2;
         --color-onedark8: #abb2bf;
+        --bg-color: #282c34;
+        --color-primary: #56b6c2;
+        --color-lightGrey: #abb2bf;
+        --font-size: 1.6rem;
+        --font-color: #abb2bf;
         --font-family-sans: "Open Sans";
+        --font-family-mono: monaco, "Consolas", "Lucida Console", monospace;
       }
       header{
         background: linear-gradient(#282c34b9, #282c34b9), url("pic/ss1.jpg") no-repeat;
         background-size: cover
       }
+      #ss img{ display: block }
       .col-8-md{ padding: 20px }
       @media (max-width: 600px){
         .col-8-md{ padding: 20px 0 }
@@ -32,12 +39,12 @@
   </head>
   <body>
     <header class="is-marginless is-center">
-      <h1 style="margin: 25vh auto; color: var(--color-onedark8); text-shadow: 0 0 10px black">Shadow Only Shaders</h1>
+      <h1 style="margin: 12vh auto; color: var(--color-onedark8); text-shadow: 0 0 10px black">Shadow Only Shaders</h1>
     </header>
-    <div class="row is-marginless is-center" style="background-color: var(--color-onedark1)">
-      <div class="col-8-md">
+    <div class="row is-marginless is-center">
+      <div class="col-9">
         <h2 style="text-align: center; color: var(--color-onedark3)">About</h2>
-        <p style="text-align: center; color: var(--color-onedark8)">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero ipsa corporis illum sed fugit nulla est laboriosam, eaque consequuntur at. Architecto fugit maxime, porro modi temporibus repudiandae eius sit. Velit!
+        <p class="text-center">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero ipsa corporis illum sed fugit nulla est laboriosam, eaque consequuntur at. Architecto fugit maxime, porro modi temporibus repudiandae eius sit. Velit!
           <br>
           <br>
           Lorem ipsum, dolor sit amet consectetur adipisicing elit.
@@ -45,10 +52,10 @@
         <hr style="margin: 0; background-color: var(--color-onedark3)">
       </div>
     </div>
-    <div class="row is-marginless is-center" style="background-color: var(--color-onedark1)">
-      <div class="col-8-md">
+    <div class="row is-marginless is-center">
+      <div class="col-9">
         <h2 style="color: var(--color-onedark5)">Feature</h2>
-        <ul style="color: var(--color-onedark8)">
+        <ul>
           <li>Lorem ipsum, dolor</li>
           <li>amet consectetur</li>
           <li>Architecto fugit maxime</li>
@@ -58,10 +65,48 @@
         <hr style="margin: 0; background-color: var(--color-onedark5)">
       </div>
     </div>
-
-    <div class="row is-marginless is-center" style="background-color: var(--color-onedark1)">
-      <div class="col-8-md">    
-        <h2 style="text-align: center; color: var(--color-onedark6)">Downloads</h2>
+    <div class="row is-marginless is-center">
+      <div class="col-9">    
+        <h2 style="color: var(--color-onedark4)">Warning</h2>
+        <ul>
+          <li>This shader pack only works for <b>Minecraft: Java Edition 1.14-1.19 (stable version)</b> with <a href="https://optifine.net/home"><u>Optifine</u></a> mod</li>
+          <li><b style="color: var(--color-onedark2)">You're not allowed</b> to use/copy some code in these shaders until you have read the <a href="https://github.com/bambosan/Shadow-Only-Shaders/blob/main/LICENSE"><u>LICENSE</u></a></li>
+          <li><b style="color: var(--color-onedark2)">You're not allowed</b> to re-upload the files or re-link this site as monetized URL shorteners or something like that</li>
+        </ul>
+        <hr style="margin: 0; background-color: var(--color-onedark4)">
+      </div>
+    </div>
+    <div class="row is-marginless is-center">
+      <div class="col-9 text-center">
+        <h2 style="color: var(--color-onedark6)">Downloads</h2>
+        <h4>Version 1.0</h4>
+        <a class="button" href=""><b>Download</b></a>
+        <hr style="margin: 2rem 0; background-color: var(--color-onedark6)">
+      </div>
+    </div>
+    <div class="row is-marginless is-center">
+      <div class="col-10 text-center">
+        <h2 style="color: var(--color-onedark3)">Some Screenshot</h2>
+        <div style="display: flex; overflow: scroll hidden" id="ss">
+          <img src="./pic/ss1.jpg" alt="Shadow Only Shaders" style="padding: 0 10px">
+          <img src="./pic/ss2.jpg" alt="Shadow Only Shaders" style="padding: 0 10px">
+          <img src="./pic/ss3.jpg" alt="Shadow Only Shaders" style="padding: 0 10px">
+          <img src="./pic/ss4.jpg" alt="Shadow Only Shaders" style="padding: 0 10px">
+          <img src="./pic/ss5.jpg" alt="Shadow Only Shaders" style="padding: 0 10px">
+        </div>
+        <script>
+          let i = 0, w = 0
+          let img = document.getElementById('ss').getElementsByTagName('img')
+          window.setInterval(()=> {
+            if(i < img.length - 1){
+              i++; w += img.item(0).offsetWidth
+              document.getElementById('ss').scrollLeft = w
+            } else {
+              w = 0; i = 0
+              document.getElementById('ss').scrollLeft -= document.getElementById('ss').scrollWidth;
+            }
+          }, 3000)
+        </script>
       </div>
     </div>
   </body>

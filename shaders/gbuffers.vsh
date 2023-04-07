@@ -1,31 +1,33 @@
-uniform mat4 gbufferModelViewInverse;
-attribute vec3 mc_Entity;
+#if !defined(GBUFFERS_BASIC) && !defined(GBUFFERS_SKYBASIC)
+	uniform mat4 gbufferModelViewInverse;
+	attribute vec3 mc_Entity;
 
-#ifdef GBUFFERS_SKYBASIC
-out float starData;
+	out vec4 N;
+	out vec3 wPos;
+	out vec2 uv0;
+	out vec2 uv1;
 #endif
 
-out vec2 lmCoord;
-out vec2 texCoord;
-out vec3 viewPos;
-out vec3 worldPos;
-out vec4 flatNormal;
-out vec4 vertColor;
+out vec4 vColor;
 
-void main() {
-	texCoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
-	lmCoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
-	vertColor = gl_Color;
-
-#ifdef GBUFFERS_SKYBASIC
-	starData = float(vertColor.r == vertColor.g && vertColor.g == vertColor.b && vertColor.r > 0.0);
+#ifndef GBUFFERS_BASIC
+	out vec3 vPos;
 #endif
 
-	viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
-	worldPos = mat3(gbufferModelViewInverse) * viewPos + gbufferModelViewInverse[3].xyz;
+void main(){
+#ifndef GBUFFERS_BASIC
+	vPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
+#endif
 
-	flatNormal.xyz = normalize(gl_NormalMatrix * gl_Normal);
-	flatNormal.a = float(mc_Entity.x == 1);
+	vColor = gl_Color;
 
-	gl_Position = ftransform();
+#if !defined(GBUFFERS_BASIC) && !defined(GBUFFERS_SKYBASIC)
+	uv0 = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+	uv1  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
+	wPos = vec3(gbufferModelViewInverse * vec4(vPos, 1.0));
+
+	N.xyz = normalize(gl_NormalMatrix * gl_Normal);
+	N.a = (mc_Entity.x == 1) ? 1.0 : 0.0;
+#endif
+	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }

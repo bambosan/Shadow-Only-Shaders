@@ -1,11 +1,9 @@
 #version 130
-
-out vec2 texCoord;
+out vec2 uv0;
 
 void main(){
-	vec4 pos = gl_ModelViewProjectionMatrix * gl_Vertex;
-		pos.xy /= mix(1.0, length(pos.xy), 0.85);
-		pos.z *= 0.25;
-	gl_Position = pos;
-	texCoord = gl_MultiTexCoord0.xy;
+	uv0 = gl_MultiTexCoord0.xy;
+	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+	gl_Position.xy /= mix(1.0, length(gl_Position.xy), 0.85);
+	gl_Position.z *= 0.25;
 }
